@@ -10,9 +10,13 @@
 #include <sys/wait.h>
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <pthread.h>
 #include <unistd.h>
-#include <windows.h>
+
 
 #include "adb.h"
 #include "input.h"

@@ -682,10 +682,10 @@ int input_init(int select)
     pthread_create(&mouse_thread, NULL, mouse_fun_thread, NULL);
     pthread_create(&keyboard_thread, NULL, keyboard_fun_thread, NULL);
 
-    ShowCursor(false);
+    // ShowCursor(false);
 
 
-    windows_creat();
+    // windows_creat();
 
 //     RECT rect;
 //     rect.bottom = 100;
