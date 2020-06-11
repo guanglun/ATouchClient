@@ -26,6 +26,17 @@ unsigned char cmd_creat(unsigned char cmd,unsigned char *in_buffer,unsigned char
     return 5+in_len;
 }
 
+//0x00
+void status_cmd_send(unsigned char *in_buffer,unsigned char in_len)
+{
+    unsigned char buf_tmp[100];
+    unsigned char len = 0;
+
+    len = cmd_creat(0x00,in_buffer,in_len,buf_tmp);
+
+    adb_send(buf_tmp,len);
+}
+
 //0x02
 void mouse_cmd_send(unsigned char *in_buffer,unsigned char in_len)
 {

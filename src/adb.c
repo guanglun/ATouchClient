@@ -161,6 +161,15 @@ static int adb_socket(void)
 
 }
 
+int send_status(void)
+{
+    uint8_t status_buf[4] = {0,0,0,0};
+    status_buf[0] = status.is_adb_connect;
+    status_buf[1] = status.is_keyboard_connect;
+    status_buf[2] = status.is_mouse_connect;
+    status_cmd_send(status_buf,4);
+}
+
 int adb_send(unsigned char *buffer,int len)
 {
     if(status.is_adb_connect == false)

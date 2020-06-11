@@ -16,5 +16,6 @@ struct RUN_STATUS {
 
 int adb_init(void);
 int adb_send(unsigned char *buffer,int len);
+int send_status(void);
 
 #endif

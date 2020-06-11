@@ -4,6 +4,8 @@
 
 void send_buffer(unsigned char *buf,unsigned long len);
 unsigned char cmd_creat(unsigned char cmd,unsigned char *in_buffer,unsigned char in_len,unsigned char *out_buffer);
+
+void status_cmd_send(unsigned char *in_buffer,unsigned char in_len);
 void mouse_cmd_send(unsigned char *in_buffer,unsigned char in_len);
 void keyboard_cmd_send(unsigned char *in_buffer,unsigned char in_len);
 
