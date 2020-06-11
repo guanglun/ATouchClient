@@ -8,13 +8,22 @@
 #include <pthread.h>
 #include <unistd.h> 
 
+#include "adb.h"
 #include "log.h"
 #include "version.h"
+#include "scmd.h"
 
 #define LOG_HEAD "ADB"
 
+struct RUN_STATUS status = {
+    .is_adb_connect = false,
+    .is_mouse_connect = false,
+    .is_keyboard_connect = false
+};
+
 char cmd_str[4096],recv_str[4096];
 FILE *fp; 
+int sockfd;
 
 static int adb_check_exist(void)
 {
@@ -108,7 +117,7 @@ static int adb_socket(void)
     char recv_buf[1024];
     size_t recv_size;
 
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd < 0)
     {
 		return -1;
@@ -126,7 +135,7 @@ static int adb_socket(void)
         //LOG("socket connect fail\r\n");
 	    return -1;
     }
-
+    status.is_adb_connect = true;
     LOG("socket connect success\r\n");
     while(1)
     {
@@ -150,6 +159,21 @@ static int adb_socket(void)
 //     }
 //     close(sockfd);
 
+}
+
+int adb_send(unsigned char *buffer,int len)
+{
+    if(status.is_adb_connect == false)
+    {
+        return -1;
+    }
+
+    if(write(sockfd, buffer, len) != len)
+    {
+		close(sockfd);
+    }
+
+    return 0;
 }
 
 pthread_t adb_thread;
@@ -180,6 +204,7 @@ void *adb_fun_thread(void *arg)
 
         adb_socket();
 
+        status.is_adb_connect = false;
         is_found_device = 0;
         //LOG("restart\r\n");
         sleep(2);
@@ -192,6 +217,7 @@ int adb_init(void)
 {
     int ret;
 
+    
     // ret = adb_check_exist();
     // if(ret < 0)
     //     return -1;

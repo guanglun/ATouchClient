@@ -9,7 +9,7 @@ void log_byte(unsigned char *buf,int len)
     int i = 0;
     for(;i<len;i++)
     {
-        printf("%X ",*(buf+i));
+        printf("%02X ",*(buf+i));
     }
     printf("\r\n");
 }

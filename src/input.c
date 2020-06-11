@@ -18,7 +18,16 @@
 #include "log.h"
 #include "version.h"
 
+#include "adb.h"
+#include "scmd.h"
+
 #define LOG_HEAD "INPUT"
+
+#define KEY_STATUS_UP       0
+#define KEY_STATUS_DOWN     1
+#define KEY_STATUS_KEEP     2
+
+extern struct RUN_STATUS status;
 
 enum INPUT_CLASS{
     INPUT_UNKNOW = 0,
@@ -33,6 +42,61 @@ struct INPUT_DEVICE{
 };
 
 struct INPUT_DEVICE mouse,keyboard;
+
+static unsigned char kbd_keycodes[256] = {
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_A,
+	KEY_B,		KEY_C,		KEY_D,		KEY_E,		KEY_F,
+	KEY_G,		KEY_H,		KEY_I,		KEY_J,		KEY_K,
+	KEY_L,		KEY_M,		KEY_N,		KEY_O,		KEY_P,
+	KEY_Q,		KEY_R,		KEY_S,		KEY_T,		KEY_U,
+	KEY_V,		KEY_W,		KEY_X,		KEY_Y,		KEY_Z,
+	KEY_1,		KEY_2,		KEY_3,		KEY_4,		KEY_5,
+	KEY_6,		KEY_7,		KEY_8,		KEY_9,		KEY_0,
+	KEY_ENTER,	KEY_ESC,	KEY_BACKSPACE,	KEY_TAB,	KEY_SPACE,
+	KEY_MINUS,	KEY_EQUAL,	KEY_LEFTBRACE,	KEY_RIGHTBRACE,	KEY_BACKSLASH,
+	KEY_RESERVED,	KEY_SEMICOLON,	KEY_APOSTROPHE,	KEY_GRAVE,	KEY_COMMA,
+	KEY_DOT,	KEY_SLASH,	KEY_CAPSLOCK,	KEY_F1,		KEY_F2,
+	KEY_F3,		KEY_F4,		KEY_F5,		KEY_F6,		KEY_F7,
+	KEY_F8,		KEY_F9,		KEY_F10,	KEY_F11,	KEY_F12,
+	KEY_SYSRQ,	KEY_SCROLLLOCK,	KEY_PAUSE,	KEY_INSERT,	KEY_HOME,
+	KEY_PAGEUP,	KEY_DELETE,	KEY_END,	KEY_PAGEDOWN,	KEY_RIGHT,
+	KEY_LEFT,	KEY_DOWN,	KEY_UP,		KEY_NUMLOCK,	KEY_KPSLASH,
+	KEY_KPASTERISK,	KEY_KPMINUS,	KEY_KPPLUS,	KEY_KPENTER,	KEY_KP1,
+	KEY_KP2,	KEY_KP3,	KEY_KP4,	KEY_KP5,	KEY_KP6,
+	KEY_KP7,	KEY_KP8,	KEY_KP9,	KEY_KP0,	KEY_KPDOT,
+	KEY_102ND,	KEY_COMPOSE,	KEY_POWER,	KEY_KPEQUAL,	KEY_F13,
+	KEY_F14,	KEY_F15,	KEY_F16,	KEY_F17,	KEY_F18,
+	KEY_F19,	KEY_F20,	KEY_F21,	KEY_F22,	KEY_F23,
+	KEY_F24,	KEY_OPEN,	KEY_HELP,	KEY_PROPS,	KEY_FRONT,
+	KEY_STOP,	KEY_AGAIN,	KEY_UNDO,	KEY_CUT,	KEY_COPY,
+	KEY_PASTE,	KEY_FIND,	KEY_MUTE,	KEY_VOLUMEUP,	KEY_VOLUMEDOWN,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_KPCOMMA,	KEY_RESERVED,
+	KEY_RO,		KEY_KATAKANAHIRAGANA, KEY_YEN,	KEY_HENKAN,	KEY_MUHENKAN,
+	KEY_KPJPCOMMA,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_HANGUEL,
+	KEY_HANJA,	KEY_KATAKANA,	KEY_HIRAGANA,	KEY_ZENKAKUHANKAKU, KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,	KEY_LEFTCTRL,
+	KEY_LEFTSHIFT,	KEY_LEFTALT,	KEY_LEFTMETA,	KEY_RIGHTCTRL,	KEY_RIGHTSHIFT,
+	KEY_RIGHTALT,	KEY_RIGHTMETA,	KEY_PLAYPAUSE,	KEY_STOPCD,	KEY_PREVIOUSSONG,
+	KEY_NEXTSONG,	KEY_EJECTCD,	KEY_VOLUMEUP,	KEY_VOLUMEDOWN,	KEY_MUTE,
+	KEY_WWW,	KEY_BACK,	KEY_FORWARD,	KEY_STOP,	KEY_FIND,
+	KEY_SCROLLUP,	KEY_SCROLLDOWN,	KEY_EDIT,	KEY_SLEEP,	KEY_COFFEE,
+	KEY_REFRESH,	KEY_CALC,	KEY_RESERVED,	KEY_RESERVED,	KEY_RESERVED,
+	KEY_RESERVED
+};
 
 static enum INPUT_CLASS get_input_class(int fd)
 {
@@ -99,7 +163,7 @@ int input_scan(void)
     int fd;
     char name[80];
     char path[20];
-    for(int i = 5 ;i<10;i++)
+    for(int i = 5 ;i < 10;i++)
     {
         sprintf(path,"/dev/input/event%d",i);
 
@@ -128,6 +192,7 @@ int input_scan(void)
                         mouse.fd = fd;
                         memcpy(mouse.path,path,sizeof(path));
                         mouse.enable = true;
+                        status.is_mouse_connect = true;
                     }
 
                     break;
@@ -140,6 +205,7 @@ int input_scan(void)
                         keyboard.fd = fd;
                         memcpy(keyboard.path,path,sizeof(path));
                         keyboard.enable = true;
+                        status.is_keyboard_connect = true;
                     }
 
                     break;                        
@@ -176,63 +242,58 @@ void *mouse_fun_thread(void *arg)
                 close(mouse.fd);
                 mouse.fd = 0;
                 mouse.enable = false;
+                status.is_mouse_connect = false;
             }else{
-
-                report = true;
-                memset(buf+1,0,3);
-                if(event.type == EV_KEY && event.code == BTN_LEFT)
+                if(event.type == EV_SYN && event.code == SYN_REPORT)
                 {
-                    
+                    report = true;
+                }else if(event.type == EV_KEY && event.code == BTN_LEFT)
+                {
+                    if(event.value)
+                    {
+                        buf[0] |= 0x01;
+                    }
+                    else
+                    {
+                        buf[0] &= (~0x01);
+                    }  
+                }else if(event.type == EV_KEY && event.code == BTN_RIGHT)
+                {
+                    if(event.value)
+                    {
+                        buf[0] |= 0x02;
+                    }
+                    else
+                    {
+                        buf[0] &= (~0x02);
+                    }  
+                }else if(event.type == EV_KEY && event.code == BTN_MIDDLE)
+                {
+                    if(event.value)
+                    {
+                        buf[0] |= 0x04;
+                    }
+                    else
+                    {
+                        buf[0] &= (~0x04);
+                    }  
+                }else if(event.type == EV_REL && event.code == REL_X)
+                {
+                    buf[1] = (char)event.value;  
+                }else if(event.type == EV_REL && event.code == REL_Y)
+                {
+                    buf[2] = (char)event.value;  
+                }else if(event.type == EV_REL && event.code == REL_WHEEL)
+                {
+                    buf[3] = (char)event.value;  
                 }
-                // switch(event.code)
-                // {
-                //     case BTN_LEFT:
-                //         if(event.value)
-                //         {
-                //             buf[0] |= 0x01;
-                //         }
-                //         else
-                //         {
-                //             buf[0] &= (~0x01);
-                //         }  
-                //     break;
-                //     case BTN_RIGHT:
-                //         if(event.value)
-                //         {
-                //             buf[0] |= 0x02;
-                //         }
-                //         else
-                //         {
-                //             buf[0] &= (~0x02);
-                //         }  
-                //     break;     
-                //     case BTN_MIDDLE:
-                //         if(event.value)
-                //         {
-                //             buf[0] |= 0x04;
-                //         }
-                //         else
-                //         {
-                //             buf[0] &= (~0x04);
-                //         }  
-                //     break;    
-                //     case REL_X:
-                //         buf[1] = (char)event.value;
-                //     break;    
-                //     case REL_Y:
-                //         buf[2] = (char)event.value;
-                //     break;            
-                //     case REL_WHEEL:
-                //         buf[3] = (char)event.value;
-                //     break;                                           
-                //     default:
-                //         report = false;
-                //     break;
-                // }
 
                 if(report == true)
                 {
-                    log_byte(buf,4);
+                    //log_byte(buf,4);
+                    mouse_cmd_send(buf,4);
+                    memset(buf+1,0,3);
+                    report = false;
                 }
                 //LOG("[mouse]%04x %04x %08x\r\n", event.type, event.code, event.value);
             }
@@ -244,9 +305,13 @@ void *mouse_fun_thread(void *arg)
 void *keyboard_fun_thread(void *arg)
 {
     int ret;
-    struct input_event event;
-    LOG("keyboard thread start\r\n");
+    bool report = false;
 
+    struct input_event event;
+    unsigned char buf[8];
+    LOG("keyboard thread start\r\n");
+    bool is_keep_only = true;
+    unsigned char i,m,n;
     while(1)
     {
         if(keyboard.enable == true)
@@ -257,8 +322,126 @@ void *keyboard_fun_thread(void *arg)
                 close(keyboard.fd);
                 keyboard.fd = 0;
                 keyboard.enable = false;
+                status.is_keyboard_connect = false;
             }else{
-                LOG("[keyboard]%04x %04x %08x\r\n", event.type, event.code, event.value);
+                if(event.type == EV_SYN && event.code == SYN_REPORT)
+                {
+                    report = true;
+                    
+                }else if(event.type == EV_KEY && event.value == KEY_STATUS_DOWN)
+                {
+                    is_keep_only = false;
+                    if(event.code == KEY_LEFTCTRL)
+                    {
+                        buf[0] |= 0x01;
+                    }else if(event.code == KEY_LEFTSHIFT)
+                    {
+                        buf[0] |= 0x02;
+                    }else if(event.code == KEY_LEFTALT)
+                    {
+                        buf[0] |= 0x04;
+                    }else if(event.code == KEY_LEFTMETA)
+                    {
+                        buf[0] |= 0x08;
+                    }else if(event.code == KEY_RIGHTCTRL)
+                    {
+                        buf[0] |= 0x10;
+                    }else if(event.code == KEY_RIGHTSHIFT)
+                    {
+                        buf[0] |= 0x20;
+                    }else if(event.code == KEY_RIGHTALT)
+                    {
+                        buf[0] |= 0x40;
+                    }else if(event.code == KEY_RIGHTMETA)
+                    {
+                        buf[0] |= 0x80;
+                    }else{
+                        for(i=0;i<255;i++)
+                        {
+                            if(kbd_keycodes[i] == event.code)
+                            {
+                                break;
+                            }
+                        }
+
+                        for(m = 2;m < 8;m++)
+                        {
+                            if(buf[m] == 0)
+                            {
+                                buf[m] = i;
+                                break;
+                            }
+                        }
+                    }
+                }else if(event.type == EV_KEY && event.value == KEY_STATUS_UP)
+                {
+                    is_keep_only = false;
+                    if(event.code == KEY_LEFTCTRL)
+                    {
+                        buf[0] &= (~0x01);
+                    }else if(event.code == KEY_LEFTSHIFT)
+                    {
+                        buf[0] &= (~0x02);
+                    }else if(event.code == KEY_LEFTALT)
+                    {
+                        buf[0] &= (~0x04);
+                    }else if(event.code == KEY_LEFTMETA)
+                    {
+                        buf[0] &= (~0x08);
+                    }else if(event.code == KEY_RIGHTCTRL)
+                    {
+                        buf[0] &= (~0x10);
+                    }else if(event.code == KEY_RIGHTSHIFT)
+                    {
+                        buf[0] &= (~0x20);
+                    }else if(event.code == KEY_RIGHTALT)
+                    {
+                        buf[0] &= (~0x40);
+                    }else if(event.code == KEY_RIGHTMETA)
+                    {
+                        buf[0] &= (~0x80);
+                    }else{
+                        for(i=0;i<255;i++)
+                        {
+                            if(kbd_keycodes[i] == event.code)
+                            {
+                                break;
+                            }
+                        }
+
+                        for(m = 2;m < 8;m++)
+                        {
+                            if(buf[m] == i)
+                            {
+                                break;
+                            }
+                        }
+
+                        for(n = m;n < 7;n++)
+                        {
+                            if(buf[n+1] != 0)
+                            {
+                                buf[n] = buf[n+1];
+                            }else{
+                                buf[n] = 0;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if(report == true)
+                {
+                    if(is_keep_only == false)
+                    {
+                        //log_byte(buf,8);
+                        keyboard_cmd_send(buf,8);
+                        is_keep_only = true;
+                    }
+                    report = false;
+                }
+
+                //LOG("[keyboard]%04x %04x %08x\r\n", event.type, event.code, event.value);
             }
             
         }
@@ -287,8 +470,6 @@ int input_init(void)
 {
     mouse.enable = false;
     keyboard.enable = false;
-
-    
 
     pthread_create(&scan_thread, NULL, scan_fun_thread, NULL);
     pthread_create(&mouse_thread, NULL, mouse_fun_thread, NULL);
