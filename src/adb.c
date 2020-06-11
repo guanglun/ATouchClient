@@ -1,10 +1,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#ifdef __linux__
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
+#include <unistd.h>
+#endif
+
+#ifdef _WIN32
+#include <winsock2.h>
+#endif
+
 #include <pthread.h>
 #include <unistd.h>
 
@@ -14,6 +23,8 @@
 #include "scmd.h"
 
 #define LOG_HEAD "ADB"
+
+#define ADB_FORWARD_PORT 5555
 
 struct RUN_STATUS status = {
     .is_adb_connect = false,
@@ -89,7 +100,7 @@ static int adb_start_remote_server(void)
     char search_flag = 0;
     char pid_str[9];
 
-    sprintf(cmd_str, "adb shell ps -A | grep ATouchService");
+    sprintf(cmd_str, "adb shell \"ps -A | grep ATouchService\"");
     //LOG("%s\r\n", cmd_str);
 
     memset(recv_str, 0, sizeof(recv_str));
@@ -137,20 +148,43 @@ static int adb_start_remote_server(void)
     if (search_flag == 3)
     {
         LOG("found pid:%s\r\n", pid_str);
-        sprintf(cmd_str, "adb shell kill -s 9 %s", pid_str);
-        system(cmd_str);
-        //LOG("%s", cmd_str);
+        sprintf(cmd_str, "adb shell \"kill -s 9 %s\"", pid_str);
+
+        memset(recv_str, 0, sizeof(recv_str));
+        fp = popen(cmd_str, "r");
+        fgets(recv_str, sizeof(recv_str), fp);
     }
     else
     {
         LOG("not found pid\r\n");
     }
 
-    sprintf(cmd_str, "adb shell cp /mnt/sdcard/ATouch/ATouchService /data/local/tmp", pid_str);
+    sprintf(cmd_str, "adb shell \"cp /mnt/sdcard/ATouch/ATouchService /data/local/tmp\"", pid_str);
     system(cmd_str);
-    sprintf(cmd_str, "adb shell \"/data/local/tmp/ATouchService &\"&", pid_str);
-    system(cmd_str);    
+
+#ifdef __linux__
+    sprintf(cmd_str, "adb shell \"/data/local/tmp/ATouchService &\"", pid_str);
+#endif
+
+#ifdef _WIN32
+    sprintf(cmd_str, "start /b adb shell \"/data/local/tmp/ATouchService &\"", pid_str);
+#endif
+
+    system(cmd_str);
+
+    LOG("server start\r\n");
+
     return 0;
+}
+
+static int adb_version(void)
+{
+    sprintf(cmd_str, "adb version");
+
+    memset(recv_str, 0, sizeof(recv_str));
+    fp = popen(cmd_str, "r");
+    fgets(recv_str, sizeof(recv_str), fp);
+    LOG("%s", recv_str) ;
 }
 
 static int adb_devices(void)
@@ -179,7 +213,7 @@ static int adb_devices(void)
 static int adb_forward(void)
 {
 
-    sprintf(cmd_str, "adb forward tcp:7680 tcp:1989");
+    sprintf(cmd_str, "adb forward tcp:%d tcp:1989", ADB_FORWARD_PORT);
     //LOG("%s\r\n", cmd_str) ;
 
     memset(recv_str, 0, sizeof(recv_str));
@@ -190,7 +224,16 @@ static int adb_forward(void)
 static int adb_socket(void)
 {
     char recv_buf[1024];
-    size_t recv_size;
+    int recv_size;
+
+#ifdef _WIN32
+    WSADATA wsadata;
+    if (WSAStartup(MAKEWORD(1, 1), &wsadata) == SOCKET_ERROR)
+    {
+        LOG("WSAStartup() fail\n");
+        exit(0);
+    }
+#endif
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
@@ -201,8 +244,15 @@ static int adb_socket(void)
     struct sockaddr_in serveraddr;
     memset(&serveraddr, 0, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
-    serveraddr.sin_port = htons(7680);
+    serveraddr.sin_port = htons(ADB_FORWARD_PORT);
+
+#ifdef __linux__
     inet_pton(AF_INET, "127.0.0.1", &serveraddr.sin_addr);
+#endif
+
+#ifdef _WIN32
+    serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+#endif
 
     if (connect(sockfd, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) < 0)
     {
@@ -211,37 +261,46 @@ static int adb_socket(void)
     }
     status.is_adb_connect = true;
 
-    //LOG("socket connect success\r\n");
+    LOG("socket connect\r\n");
 
     while (1)
     {
-        if ((recv_size = read(sockfd, recv_buf, sizeof(recv_buf))) < 0)
+#ifdef __linux__
+        recv_size = read(sockfd, recv_buf, sizeof(recv_buf));
+#endif
+
+#ifdef _WIN32
+        recv_size = recv(sockfd, recv_buf, sizeof(recv_buf), 0);
+#endif
+        if (recv_size < 0)
         {
-            return -1;
+            break;
         }
-        else
+        else if (recv_size > 0)
         {
-            if (recv_size > 0)
-            {
-                recv_buf[recv_size] = '\0';
-                LOG("%s\r\n", recv_buf);
-            }
-            else
-            {
-                return -1;
-            }
+            recv_buf[recv_size] = '\0';
+            LOG("%s\r\n", recv_buf);
         }
     }
+
+    LOG("socket disconnect\r\n");
     //     if(write(STDOUT_FILENO, recv_buf, recv_size) != recv_size)
     //     {
     // 		perror("write error");
     //     }
+
+#ifdef __linux__
     close(sockfd);
+#endif
+
+#ifdef _WIN32
+    closesocket(sockfd);
+#endif
 }
 
 int send_status(void)
 {
-    uint8_t status_buf[4] = {0, 0, 0, 0};
+    unsigned char status_buf[4] = {0, 0, 0, 0};
     status_buf[0] = status.is_adb_connect;
     status_buf[1] = status.is_keyboard_connect;
     status_buf[2] = status.is_mouse_connect;
@@ -255,10 +314,19 @@ int adb_send(unsigned char *buffer, int len)
         return -1;
     }
 
+#ifdef __linux__
     if (write(sockfd, buffer, len) != len)
     {
         close(sockfd);
     }
+#endif
+
+#ifdef _WIN32
+    if (send(sockfd, buffer, len, 0) != len)
+    {
+        closesocket(sockfd);
+    }
+#endif
 
     return 0;
 }
@@ -267,10 +335,12 @@ pthread_t adb_thread;
 
 void *adb_fun_thread(void *arg)
 {
-    
+
     int is_found_device = 0;
 
     LOG("adb thread start\r\n");
+
+    adb_version();
 
     while (1)
     {
@@ -289,11 +359,10 @@ void *adb_fun_thread(void *arg)
 
         adb_forward();
 
-        //sleep(2);
-        //LOG("start connect socket\r\n");
+        sleep(1);
+        LOG("start connect socket\r\n");
 
-
-        for(int try = 0;try < 100;try++)
+        //for (int try = 0; try < 100; try ++)
         {
             adb_socket();
         }

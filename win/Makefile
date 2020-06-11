@@ -15,19 +15,20 @@ SRCS := $(wildcard $(SRCS))
 OBJS = $(SRCS:.c=.o)
 OBJS :=$(notdir $(OBJS))  
 OBJS := $(foreach n,$(OBJS),$(OBJDIR)/$(n))
-CCFLAGS = -pthread
+CCFLAGS = -lws2_32 -pthread -Wall
 
-# $(TARGET):$(OBJS)
-# 	@echo $(filter %$(notdir $(@:.o=.c)),$(SRCS))
-# 	$(CC) $(CCFLAGS) -o $@ $(OBJS)
+#@echo $(filter %$(notdir $(@:.o=.c)),$(SRCS))
+
+$(TARGET):$(OBJS)
+	$(CC) -o $@ $(OBJS) $(CCFLAGS)
+
+# @echo LIBFILE: $(LIBFILE)
+# @echo SRCS: $(SRCS)
+# @echo OBJS: $(OBJS)
+# @echo $(filter %$(notdir $(@:.o=.c)),$(SRCS))
 
 $(OBJS):$(SRCS)
-	@echo LIBFILE: $(LIBFILE)
-	@echo SRCS: $(SRCS)
-	@echo OBJS: $(OBJS)
-	@echo $(filter %$(notdir $(@:.o=.c)),$(SRCS))
-
-	$(CC) $(CCFLAGS) -o $@ -c $(filter %/$(notdir $(@:.o=.c)),$(SRCS)) $(INCLUDES)
+	$(CC) -o $@ -c $(filter %/$(notdir $(@:.o=.c)),$(SRCS)) $(INCLUDES)
 
 clean:
-	rm $(OBJDIR)/*
+	del ..\output\build\*.o

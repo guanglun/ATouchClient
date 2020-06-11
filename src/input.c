@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#ifdef __MINGW32__
+#ifdef _WIN32
 
 #endif
 
@@ -41,7 +41,7 @@ extern struct RUN_STATUS status;
 
 enum INPUT_CLASS
 {
-    INPUT_CLASS_UNKNOW,
+    INPUT_CLASS_UNKNOW = 0,
     INPUT_CLASS_MOUSE,
     INPUT_CLASS_KEYBOARD
 };
@@ -114,7 +114,7 @@ static unsigned char kbd_keycodes[256] = {
 
 static enum INPUT_CLASS get_input_class(int fd)
 {
-    #ifdef __linux__
+#ifdef __linux__
 
     uint8_t *bits = NULL;
     ssize_t bits_size = 0;
@@ -179,7 +179,7 @@ static enum INPUT_CLASS get_input_class(int fd)
         return INPUT_CLASS_KEYBOARD;
     }
 
-    #endif
+#endif
 
     return INPUT_CLASS_UNKNOW;
 }
@@ -215,7 +215,7 @@ int input_exit(void)
 
 static int input_scan(void)
 {
-    #ifdef __linux__
+#ifdef __linux__
     int fd;
     char name[80];
     char path[20];
@@ -280,13 +280,14 @@ static int input_scan(void)
         }
     }
 
-    #endif
+#endif
 
     return 0;
 }
 
 static int select_input(void)
 {
+#ifdef __linux__
     int fd;
     int selectid = 0;
     char name[80];
@@ -332,7 +333,9 @@ static int select_input(void)
         mouse.enable = true;
         status.is_mouse_connect = true;
         set_input_disable(name, XINPUT_MOUSE);
-    }else{
+    }
+    else
+    {
         input_exit();
         printf("open fail,exit\r\n");
     }
@@ -355,7 +358,9 @@ static int select_input(void)
         keyboard.enable = true;
         status.is_keyboard_connect = true;
         set_input_disable(name, XINPUT_KEYBOARD);
-    }else{
+    }
+    else
+    {
         input_exit();
         printf("open fail,exit\r\n");
     }
@@ -363,12 +368,13 @@ static int select_input(void)
     LOG("%s INPUT_MOUSE    \t%s \r\n", mouse.path, mouse.name);
     LOG("%s INPUT_KEYBOARD \t%s \r\n", keyboard.path, keyboard.name);
 
+#endif
     return 0;
 }
 
 void *mouse_fun_thread(void *arg)
 {
-    #ifdef __linux__
+#ifdef __linux__
     int ret;
     bool report = false;
     unsigned char buf[4];
@@ -452,12 +458,12 @@ void *mouse_fun_thread(void *arg)
             }
         }
     }
-    #endif
+#endif
 }
 
 void *keyboard_fun_thread(void *arg)
 {
-    #ifdef __linux__
+#ifdef __linux__
     int ret;
     bool report = false;
 
@@ -629,7 +635,7 @@ void *keyboard_fun_thread(void *arg)
             }
         }
     }
-    #endif
+#endif
 }
 
 void *scan_fun_thread(void *arg)
