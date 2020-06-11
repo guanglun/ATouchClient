@@ -15,7 +15,7 @@ SRCS := $(wildcard $(SRCS))
 OBJS = $(SRCS:.c=.o)
 OBJS :=$(notdir $(OBJS))  
 OBJS := $(foreach n,$(OBJS),$(OBJDIR)/$(n))
-CCFLAGS = -lws2_32 -pthread -Wall
+CCFLAGS = -lws2_32 -pthread -fexec-charset=GBK # -Wall
 
 #@echo $(filter %$(notdir $(@:.o=.c)),$(SRCS))
 
@@ -28,7 +28,7 @@ $(TARGET):$(OBJS)
 # @echo $(filter %$(notdir $(@:.o=.c)),$(SRCS))
 
 $(OBJS):$(SRCS)
-	$(CC) -o $@ -c $(filter %/$(notdir $(@:.o=.c)),$(SRCS)) $(INCLUDES)
+	$(CC) -o $@ -c $(filter %/$(notdir $(@:.o=.c)),$(SRCS)) $(INCLUDES) $(CCFLAGS)
 
 clean:
 	del ..\output\build\*.o

@@ -19,7 +19,7 @@
 #include <stdbool.h>
 
 #ifdef _WIN32
-
+#include <windows.h>
 #endif
 
 #include "log.h"
@@ -656,12 +656,19 @@ void *scan_fun_thread(void *arg)
     }
 }
 
+static int windows_creat(void)
+{
+
+    return 0;
+}
+
 pthread_t mouse_thread, keyboard_thread, scan_thread;
 int input_init(int select)
 {
     mouse.enable = false;
     keyboard.enable = false;
 
+#ifdef __linux__
     if (select == 0)
     {
         pthread_create(&scan_thread, NULL, scan_fun_thread, NULL);
@@ -670,9 +677,34 @@ int input_init(int select)
     {
         select_input();
     }
+#endif
 
     pthread_create(&mouse_thread, NULL, mouse_fun_thread, NULL);
     pthread_create(&keyboard_thread, NULL, keyboard_fun_thread, NULL);
 
+    ShowCursor(false);
+
+
+    windows_creat();
+
+//     RECT rect;
+//     rect.bottom = 100;
+//     rect.right = 100;
+// //-----------add------
+//     rect.left = 100;
+//     rect.top = 100;
+// //-----------end-----
+//     ClipCursor(&rect);
+
+//     while(1)
+//     {
+//         POINT p;
+//         GetCursorPos(&p);
+//         LOG("%d %d\r\n",p.x,p.y);
+//         //SetCursorPos(100,100);
+//     }
+
+
     return 0;
 }
+
