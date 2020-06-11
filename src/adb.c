@@ -159,11 +159,11 @@ static int adb_start_remote_server(void)
         LOG("not found pid\r\n");
     }
 
-    sprintf(cmd_str, "adb shell \"cp /mnt/sdcard/ATouch/ATouchService /data/local/tmp\"", pid_str);
+    sprintf(cmd_str, "adb shell \"cp /mnt/sdcard/ATouch/ATouchService /data/local/tmp\"");
     system(cmd_str);
 
 #ifdef __linux__
-    sprintf(cmd_str, "adb shell \"/data/local/tmp/ATouchService &\"", pid_str);
+    sprintf(cmd_str, "adb shell \"/data/local/tmp/ATouchService &\" &");
 #endif
 
 #ifdef _WIN32

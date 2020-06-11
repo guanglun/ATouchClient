@@ -624,7 +624,7 @@ void *keyboard_fun_thread(void *arg)
                 {
                     if (is_keep_only == false)
                     {
-                        //log_byte(buf, 8);
+                        log_byte(buf, 8);
                         keyboard_cmd_send(buf, 8);
                         is_keep_only = true;
                     }

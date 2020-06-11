@@ -1,4 +1,4 @@
-#CC=gcc 
+CC=gcc 
 
 ifeq ($(ARCH),arm)
 CC=arm-linux-gnueabihf-gcc
@@ -6,11 +6,11 @@ INCLUDES += /home/guanglun/workspace/lichee_zero/linux
 endif
 
 SRCDIR = 				\
-		src				\
-		src/log			\
+		../src				\
+		../src/log			\
 
-OBJDIR = output/build
-BINDIR = output/bin
+OBJDIR = ../output/build
+BINDIR = ../output/bin
 BINAME = ATouchClient
 
 INCLUDES += $(foreach n,$(SRCDIR),-I $(n))
@@ -26,11 +26,11 @@ CCFLAGS = -pthread
 $(TARGET):$(OBJS)
 	$(CC) $(CCFLAGS) -o $@ $(OBJS)
 
+# @echo $(filter %$(notdir $(@:.o=.c)),$(SRCS))
+# @echo LIBFILE: $(LIBFILE)
+# @echo SRCS: $(SRCS)
+# @echo OBJS: $(OBJS)
 $(OBJS):$(SRCS)
-	@echo $(filter %$(notdir $(@:.o=.c)),$(SRCS))
-	@echo LIBFILE: $(LIBFILE)
-	@echo SRCS: $(SRCS)
-	@echo OBJS: $(OBJS)
 	$(CC) $(CCFLAGS) -o $@ -c $(filter %/$(notdir $(@:.o=.c)),$(SRCS)) $(INCLUDES)
 
 clean:
