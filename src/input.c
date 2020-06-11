@@ -137,7 +137,7 @@ static enum INPUT_CLASS get_input_class(int fd)
             if (bits == NULL)
             {
                 fprintf(stderr, "failed to allocate buffer of size %d\n", (int)bits_size);
-                return INPUT_UNKNOW;
+                return INPUT_CLASS_UNKNOW;
             }
         }
         for (j = 0; j < res; j++)
@@ -172,16 +172,16 @@ static enum INPUT_CLASS get_input_class(int fd)
 
     if (mouse_feature_count >= 3)
     {
-        return INPUT_MOUSE;
+        return INPUT_CLASS_MOUSE;
     }
     else if (keyboard_feature_count >= 10)
     {
-        return INPUT_KEYBOARD;
+        return INPUT_CLASS_KEYBOARD;
     }
 
     #endif
 
-    return INPUT_UNKNOW;
+    return INPUT_CLASS_UNKNOW;
 }
 
 static void set_input_enable(char *name, char *class)
@@ -238,10 +238,10 @@ static int input_scan(void)
 
             switch (input_class)
             {
-            case INPUT_UNKNOW:
+            case INPUT_CLASS_UNKNOW:
                 //LOG("%s INPUT_UNKNOW \t%s \r\n",path,name);
                 break;
-            case INPUT_MOUSE:
+            case INPUT_CLASS_MOUSE:
                 //LOG("%s INPUT_MOUSE \t%s \r\n",path,name);
 
                 if (mouse.enable == false)
@@ -256,7 +256,7 @@ static int input_scan(void)
                 }
 
                 break;
-            case INPUT_KEYBOARD:
+            case INPUT_CLASS_KEYBOARD:
                 //LOG("%s INPUT_KEYBOARD \t%s \r\n",path,name);
 
                 if (keyboard.enable == false)
