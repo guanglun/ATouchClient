@@ -120,11 +120,37 @@ exit:
 
 #ifdef _WIN32
 
+
+POINT centerp,centerpc,pd;
 pthread_t main_thread;
 
 void *main_fun_thread(void *arg)
 {
     main_init(0);
+}
+
+static void reload_window_size(HWND hwnd)
+{
+    ShowCursor(false);
+    
+    RECT r;
+    GetWindowRect(hwnd,&r);
+
+    r.left+=40;
+    r.top+=40;
+    r.right-=40;
+    r.bottom-=40;
+
+    ClipCursor(&r);
+
+    centerp.x = (r.right+r.left)/2;
+    centerp.y = (r.bottom+r.top)/2;
+
+    centerpc.x = centerp.x;
+    centerpc.y = centerp.y;
+
+    ScreenToClient(hwnd,&centerpc);
+    SetCursorPos(centerp.x,centerp.y);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -137,12 +163,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_DESTROY:
             PostQuitMessage(0);
             break;
+        case WM_MOUSEMOVE:
+            pd.x = LOWORD(lParam)-centerpc.x;
+            pd.y = HIWORD(lParam)-centerpc.y;
+            if(pd.x != 0 || pd.y != 0)
+            printf("%d %d\r\n",pd.x,pd.y );
+            SetCursorPos(centerp.x,centerp.y);
+            //OnMouseMove(hwnd, LOWORD(lParam), HIWORD(lParam), (int)wParam);
+            break;
+        case WM_MOVE:
+            reload_window_size(hwnd);
+            break;
         default:
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
 }
- 
+
+
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     LPSTR lpCmdLine, int nCmdShow)
 {
@@ -180,7 +219,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         szClassName,            // 指向注册类名的指针
         "ATouch "VERSION,       // 指向窗口名称的指针
         WS_OVERLAPPEDWINDOW,    // 窗口风格
-        CW_USEDEFAULT, CW_USEDEFAULT, 350, 200, // 窗口的 x,y 坐标以及宽高
+        CW_USEDEFAULT, CW_USEDEFAULT, 320, 240, // 窗口的 x,y 坐标以及宽高
         NULL,                   // 父窗口的句柄
         NULL,                   // 菜单的句柄
         hInstance,              // 应用程序实例的句柄
@@ -194,10 +233,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
  
     // 4. 显示窗口
+    
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
 
     pthread_create(&main_thread, NULL, main_fun_thread, NULL);
+
+    reload_window_size(hwnd);
 
     // 6. 消息循环
     while(GetMessage(&Msg, NULL, 0, 0) > 0)
