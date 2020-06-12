@@ -68,10 +68,15 @@
 
 ![设置界面](https://images.gitee.com/uploads/images/2020/0408/110030_b23d7f55_683968.png "atouch3.png")
 
+![gif](https://images.gitee.com/uploads/images/2020/0423/150126_eb0fbd7b_683968.gif "bili_v_d_1587624907338.gif")
+
+![gif](https://images.gitee.com/uploads/images/2020/0423/150325_ff6f7a4a_683968.gif "bili_v_d_1587625362445.gif")
+
 * 更新日志  
 
 | 时间 | 内容 |
 |:-----:|:-----:|
 | 2020/6/12 | V1.0.0测试版   |
 
-## 欢迎加入 光流电子交流群  558343678
+## 欢迎加入 光流电子交流群  558343678  
+
