@@ -1,6 +1,6 @@
 # ATouch
 
-## ATouch项目中的硬件源码部分，ESP32+CH374U  
+## ATouch项目中的WINDOWS OR LINUX 客户端源码
 
 ## **ATouch线上文档请点击下面链接** 
 
@@ -9,18 +9,14 @@
 ## 说明
 
 ### LINUX编译（支持嵌入式设备）
-在linux文件夹下的MakeFile中将编译器改成自己环境所使用的gcc编译器即可
-'''
-make
-'''
+在linux文件夹下的MakeFile中将编译器改成自己环境所使用的gcc编译器即可  
+`make`
 
-命令行使用请看：ATouchClient -h
+* 命令行使用请看：ATouchClient -h
 
 ### WIN编译
-使用MinGW64 直接在win文件夹下make即可
-'''
-make
-'''
+使用MinGW64 直接在win文件夹下make即可  
+`make`
 
 * 需使用adb，如果你的电脑下没有就需要自己下载并加入环境变量中
 <br/>
