@@ -1,19 +1,17 @@
 #ifndef __ADB_H__
 #define __ADB_H__
 
-#include <stdbool.h>
-
-enum ADB_STATUS
-{
-    ADB_STATUS_NOTCONNECT,
-    ADB_STATUS_CONNECT
+enum CONNECT_STATUS{
+    S_DISCONNECT = 0,
+    S_CONNECT = 1,
+    
 };
 
 struct RUN_STATUS
 {
-    bool is_adb_connect;
-    bool is_mouse_connect;
-    bool is_keyboard_connect;
+    unsigned char is_adb_connect;
+    unsigned char is_mouse_connect;
+    unsigned char is_keyboard_connect;
 };
 
 int adb_init(void);

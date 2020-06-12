@@ -251,7 +251,7 @@ static int input_scan(void)
                     memcpy(mouse.path, path, sizeof(path));
                     memcpy(mouse.name, name, sizeof(name));
                     mouse.enable = true;
-                    status.is_mouse_connect = true;
+                    status.is_mouse_connect = S_CONNECT;
                     set_input_disable(name, XINPUT_MOUSE);
                 }
 
@@ -266,7 +266,7 @@ static int input_scan(void)
                     memcpy(keyboard.path, path, sizeof(path));
                     memcpy(keyboard.name, name, sizeof(name));
                     keyboard.enable = true;
-                    status.is_keyboard_connect = true;
+                    status.is_keyboard_connect = S_CONNECT;
                     set_input_disable(name, XINPUT_KEYBOARD);
                 }
 
@@ -331,7 +331,7 @@ static int select_input(void)
         memcpy(mouse.path, path, sizeof(path));
         memcpy(mouse.name, name, sizeof(name));
         mouse.enable = true;
-        status.is_mouse_connect = true;
+        status.is_mouse_connect = S_CONNECT;
         set_input_disable(name, XINPUT_MOUSE);
     }
     else
@@ -356,7 +356,7 @@ static int select_input(void)
         memcpy(keyboard.path, path, sizeof(path));
         memcpy(keyboard.name, name, sizeof(name));
         keyboard.enable = true;
-        status.is_keyboard_connect = true;
+        status.is_keyboard_connect = S_CONNECT;
         set_input_disable(name, XINPUT_KEYBOARD);
     }
     else
@@ -392,7 +392,7 @@ void *mouse_fun_thread(void *arg)
                 close(mouse.fd);
                 mouse.fd = 0;
                 mouse.enable = false;
-                status.is_mouse_connect = false;
+                status.is_mouse_connect = S_DISCONNECT;
                 set_input_enable(mouse.name, XINPUT_MOUSE);
             }
             else
@@ -482,7 +482,7 @@ void *keyboard_fun_thread(void *arg)
                 close(keyboard.fd);
                 keyboard.fd = 0;
                 keyboard.enable = false;
-                status.is_keyboard_connect = false;
+                status.is_keyboard_connect = S_DISCONNECT;
                 set_input_enable(keyboard.name, XINPUT_KEYBOARD);
             }
             else
@@ -677,32 +677,11 @@ int input_init(int select)
     {
         select_input();
     }
-#endif
 
     pthread_create(&mouse_thread, NULL, mouse_fun_thread, NULL);
     pthread_create(&keyboard_thread, NULL, keyboard_fun_thread, NULL);
 
-    // ShowCursor(false);
-
-
-    // windows_creat();
-
-//     RECT rect;
-//     rect.bottom = 100;
-//     rect.right = 100;
-// //-----------add------
-//     rect.left = 100;
-//     rect.top = 100;
-// //-----------end-----
-//     ClipCursor(&rect);
-
-//     while(1)
-//     {
-//         POINT p;
-//         GetCursorPos(&p);
-//         LOG("%d %d\r\n",p.x,p.y);
-//         //SetCursorPos(100,100);
-//     }
+#endif
 
 
     return 0;

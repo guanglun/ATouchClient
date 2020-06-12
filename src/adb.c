@@ -26,10 +26,7 @@
 
 #define ADB_FORWARD_PORT 5555
 
-struct RUN_STATUS status = {
-    .is_adb_connect = false,
-    .is_mouse_connect = false,
-    .is_keyboard_connect = false};
+struct RUN_STATUS status;
 
 char cmd_str[4096], recv_str[4096];
 FILE *fp;
@@ -162,6 +159,12 @@ static int adb_start_remote_server(void)
     sprintf(cmd_str, "adb shell \"cp /mnt/sdcard/ATouch/ATouchService /data/local/tmp\"");
     system(cmd_str);
 
+    // sprintf(cmd_str, "adb shell \"cp /mnt/sdcard/ATouch/ATouchService /data/local/tmp\"");
+
+    // memset(recv_str, 0, sizeof(recv_str));
+    // fp = popen(cmd_str, "r");
+    // fgets(recv_str, sizeof(recv_str), fp);
+
 #ifdef __linux__
     sprintf(cmd_str, "adb shell \"/data/local/tmp/ATouchService &\" &");
 #endif
@@ -259,9 +262,10 @@ static int adb_socket(void)
         //LOG("socket connect fail\r\n");
         return -1;
     }
-    status.is_adb_connect = true;
+    
+    status.is_adb_connect = S_CONNECT;
 
-    LOG("socket connect\r\n");
+    LOG("socket connect %d\r\n",status.is_adb_connect);
 
     while (1)
     {
@@ -309,7 +313,8 @@ int send_status(void)
 
 int adb_send(unsigned char *buffer, int len)
 {
-    if (status.is_adb_connect == false)
+    //LOG("%d\n",status.is_adb_connect);
+    if (status.is_adb_connect == S_DISCONNECT)
     {
         return -1;
     }
@@ -322,8 +327,12 @@ int adb_send(unsigned char *buffer, int len)
 #endif
 
 #ifdef _WIN32
+
+    //log_byte(buffer, len);
+
     if (send(sockfd, buffer, len, 0) != len)
     {
+        LOG("adb socket send fail\r\n");
         closesocket(sockfd);
     }
 #endif
@@ -367,7 +376,7 @@ void *adb_fun_thread(void *arg)
             adb_socket();
         }
 
-        status.is_adb_connect = false;
+        status.is_adb_connect = S_DISCONNECT;
         is_found_device = 0;
         //LOG("restart\r\n");
         sleep(2);
@@ -379,6 +388,10 @@ void *adb_fun_thread(void *arg)
 int adb_init(void)
 {
     int ret;
+
+    status.is_adb_connect = S_DISCONNECT;
+    status.is_mouse_connect = S_DISCONNECT;
+    status.is_keyboard_connect = S_DISCONNECT;
 
     // ret = adb_check_exist();
     // if(ret < 0)

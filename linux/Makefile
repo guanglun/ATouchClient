@@ -9,8 +9,8 @@ SRCDIR = 				\
 		../src				\
 		../src/log			\
 
-OBJDIR = ../output/build
-BINDIR = ../output/bin
+OBJDIR = output/build
+BINDIR = output/bin
 BINAME = ATouchClient
 
 INCLUDES += $(foreach n,$(SRCDIR),-I $(n))
