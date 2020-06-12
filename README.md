@@ -1,6 +1,6 @@
 # ATouch
 
-## ATouch项目中的WINDOWS OR LINUX 客户端源码
+## ATouch项目中的WINDOWS 和 LINUX 客户端源码
 
 ## **ATouch线上文档请点击下面链接** 
 
