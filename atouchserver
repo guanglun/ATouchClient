@@ -1,0 +1,8 @@
+#!/bin/expect
+set timeout 10
+set path [lindex $argv 1 ]
+spawn adb shell
+expect " $" {send "export CLASSPATH=$path\r"}
+send "exec app_process /system/bin --nice-name=atouch_process com.guanglun.service.ATouchAgent\r"
+expect "*#"
+interact

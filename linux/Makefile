@@ -1,8 +1,12 @@
 CC=gcc 
 
 ifeq ($(ARCH),arm)
-CC=arm-linux-gnueabihf-gcc
-INCLUDES += /home/guanglun/workspace/lichee_zero/linux
+CC=/home/guanglun/workspace/Tina-t113-pro/prebuilt/gcc/linux-x86/arm/toolchain-sunxi-musl/toolchain/bin/arm-openwrt-linux-gcc
+export STAGING_DIR=/home/guanglun/workspace/Tina-t113-pro/prebuilt/gcc/linux-x86/arm/toolchain-sunxi-musl/toolchain
+
+INCLUDES += -I/home/guanglun/workspace/Tina-t113-pro/out/t113-pro/staging_dir/target/usr/include
+LDFLAGS+= -L/home/guanglun/workspace/Tina-t113-pro/out/t113-pro/staging_dir/target/usr/lib
+
 endif
 
 SRCDIR = 				\

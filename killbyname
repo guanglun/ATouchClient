@@ -1,0 +1,13 @@
+#!/bin/sh
+if [ $# -lt 1 ]
+then
+  echo "input procedure name"
+  exit 1
+fi
+
+PROCESS=`ps | grep $1 | grep -v "grep" | grep -v "kill" | awk '{print $1}'`
+for i in $PROCESS
+do
+  echo "Kill the $1 process [ $i ]"
+  kill -9 $i
+done
