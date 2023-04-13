@@ -1,14 +1,5 @@
 CC=gcc 
 
-ifeq ($(ARCH),arm)
-CC=/home/guanglun/workspace/Tina-t113-pro/prebuilt/gcc/linux-x86/arm/toolchain-sunxi-musl/toolchain/bin/arm-openwrt-linux-gcc
-export STAGING_DIR=/home/guanglun/workspace/Tina-t113-pro/prebuilt/gcc/linux-x86/arm/toolchain-sunxi-musl/toolchain
-
-INCLUDES += -I/home/guanglun/workspace/Tina-t113-pro/out/t113-pro/staging_dir/target/usr/include
-LDFLAGS+= -L/home/guanglun/workspace/Tina-t113-pro/out/t113-pro/staging_dir/target/usr/lib
-
-endif
-
 SRCDIR = 				\
 		../src				\
 		../src/log			\
@@ -26,6 +17,9 @@ OBJS = $(SRCS:.c=.o)
 OBJS :=$(notdir $(OBJS))  
 OBJS := $(foreach n,$(OBJS),$(OBJDIR)/$(n))
 CCFLAGS = -pthread
+
+$(shell if [ ! -e $(OBJDIR) ];then mkdir -p $(OBJDIR); fi)
+$(shell if [ ! -e $(BINDIR) ];then mkdir -p $(BINDIR); fi)
 
 $(TARGET):$(OBJS)
 	$(CC) $(CCFLAGS) -o $@ $(OBJS)
